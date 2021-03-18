@@ -21,6 +21,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/spf13/cobra"
 )
@@ -33,8 +34,21 @@ var ojapiCmd = &cobra.Command{
 	You can find more informations about this api here:
 	https://github.com/15Dkatz/official_joke_api`,
 	Run: func(cmd *cobra.Command, args []string) {
-		getJoke()
+		if Count < 1 {
+			log.Fatal("Count can't be lower than 1")
+		}
+		for i := 0; i < Count; i++ {
+			getJoke()
+		}
 	},
+}
+
+var Type string
+var Count int
+
+func init() {
+	ojapiCmd.Flags().StringVarP(&Type, "type", "t", "random", "Sets the joke type between: random, general, programming")
+	ojapiCmd.Flags().IntVarP(&Count, "count", "c", 1, "How many jokes are displayed, value as to be >= 1")
 }
 
 type Joke struct {
@@ -45,15 +59,32 @@ type Joke struct {
 }
 
 func getJoke() {
-	url := "https://official-joke-api.appspot.com/random_joke"
-	responseBytes := getJokeData(url)
-	joke := Joke{}
-
-	if err := json.Unmarshal(responseBytes, &joke); err != nil {
-		log.Fatal(err)
+	url := "https://official-joke-api.appspot.com/jokes/"
+	switch strings.ToLower(Type) {
+	case "random":
+	case "general":
+		url += "general/"
+	case "programming":
+		url += "programming/"
+	default:
+		log.Fatal(Type + " is not a valid joke type")
 	}
+	url += "random"
 
-	fmt.Println(joke.Setup + " " + joke.Punchline)
+	responseBytes := getJokeData(url)
+	if strings.ToLower(Type) == "random" {
+		joke := Joke{}
+		if err := json.Unmarshal(responseBytes, &joke); err != nil {
+			log.Fatal(err)
+		}
+		fmt.Println(joke.Setup + " " + joke.Punchline)
+	} else {
+		joke := []Joke{}
+		if err := json.Unmarshal(responseBytes, &joke); err != nil {
+			log.Fatal(err)
+		}
+		fmt.Println(joke[0].Setup + " " + joke[0].Punchline)
+	}
 }
 
 func getJokeData(apiURL string) []byte {
