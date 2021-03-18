@@ -26,34 +26,37 @@ import (
 )
 
 // dadCmd represents the dad command
-var dadJokeCmd = &cobra.Command{
-	Use:   "dadjoke",
-	Short: "Tells you a dad joke",
-	Long:  `Tells you a dad joke from the API icanhazdadjoke.com  `,
+var ojapiCmd = &cobra.Command{
+	Use:   "ojapi",
+	Short: "Tells you a joke from the official joke api",
+	Long: `Tells you a random joke from the official joke api.
+	You can find more informations about this api here:
+	https://github.com/15Dkatz/official_joke_api`,
 	Run: func(cmd *cobra.Command, args []string) {
-		getDadJoke()
+		getJoke()
 	},
 }
 
-type DadJoke struct {
-	ID     string `json:"id"`
-	Joke   string `json:"joke"`
-	Status int    `json:"status"`
+type Joke struct {
+	ID        int    `json:"id"`
+	Type      string `json:"type"`
+	Setup     string `json:"setup"`
+	Punchline string `json:"punchline"`
 }
 
-func getDadJoke() {
-	url := "https://icanhazdadjoke.com"
-	responseBytes := getDadJokeData(url)
-	dadJoke := DadJoke{}
+func getJoke() {
+	url := "https://official-joke-api.appspot.com/random_joke"
+	responseBytes := getJokeData(url)
+	joke := Joke{}
 
-	if err := json.Unmarshal(responseBytes, &dadJoke); err != nil {
+	if err := json.Unmarshal(responseBytes, &joke); err != nil {
 		log.Fatal(err)
 	}
 
-	fmt.Println(string(dadJoke.Joke))
+	fmt.Println(joke.Setup + " " + joke.Punchline)
 }
 
-func getDadJokeData(apiURL string) []byte {
+func getJokeData(apiURL string) []byte {
 	request, err := http.NewRequest(
 		http.MethodGet,
 		apiURL,
