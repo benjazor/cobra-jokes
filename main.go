@@ -15,8 +15,55 @@ limitations under the License.
 */
 package main
 
-import "github.com/benjazor/cobra-jokes/cmd"
+import (
+	"fmt"
+	"io/fs"
+	"io/ioutil"
+	"log"
+	"os"
+	"os/user"
+	"path"
+)
+
+type Config struct {
+	CustomJokesPath string `yaml:"custom-jokes-dir"`
+}
 
 func main() {
-	cmd.Execute()
+
+	usr, err := user.Current()
+	if err != nil {
+		log.Fatal(err)
+	}
+	configPath := path.Join(usr.HomeDir, "/.cobra-jokes.yaml")
+	defaultConfigData := []byte("hello\ngo\n")
+
+	f, err := os.Open(configPath)
+	if err != nil { // Check if config file exists
+		switch err.(type) {
+		case *fs.PathError: // Create the config file
+			err := ioutil.WriteFile(configPath, defaultConfigData, 0644)
+			if err != nil {
+				log.Fatal(err)
+			}
+			fmt.Println("Created config file @ ~/.cobra-jokes.yaml")
+			f, err = os.Open(configPath) // Open the new config file
+			if err != nil {
+				log.Fatal(err)
+			}
+		default:
+			log.Fatal(err)
+		}
+	}
+
+	// Read the bytes of the config file
+	b, err := ioutil.ReadAll(f)
+	if err != nil {
+		fmt.Println("3")
+		log.Fatal(err)
+	}
+
+	fmt.Printf("%s", b)
+
+	// cmd.Execute()
 }
